@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="de" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Creator Profiles // Rollin Noodle & The Real Plumz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { 
+            background-color: #030206; 
+            margin: 0; 
+            font-family: sans-serif; 
+            cursor: crosshair; 
+            overflow-x: hidden;
+        }
+        #canvas { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            z-index: -1; 
+        }
+        .glass { 
+            background: rgba(255, 255, 255, 0.03); 
+            backdrop-filter: blur(20px); 
+            border: 1px solid rgba(255, 255, 255, 0.05); 
+        }
+        .page-section { 
+            min-height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            padding: 2rem; 
+        }
+        #modal { backdrop-filter: blur(10px); }
+    </style>
+</head>
+<body class="text-white">
+    <canvas id="canvas"></canvas>
+
+    <section id="start-section" class="page-section">
+        <h1 class="text-5xl md:text-7xl font-bold tracking-tighter mb-12">Wähle dein Profil</h1>
+        <div class="flex flex-col md:flex-row gap-8">
+            <button onclick="selectProfile('Rollin Noodle')" class="glass px-12 py-8 rounded-3xl hover:bg-white/10 transition-all text-2xl font-bold">Rollin Noodle</button>
+            <button onclick="selectProfile('The Real Plumz')" class="glass px-12 py-8 rounded-3xl hover:bg-white/10 transition-all text-2xl font-bold">The Real Plumz</button>
+        </div>
+    </section>
+
+    <section id="profile-section" class="page-section">
+        <h1 id="profile-name" class="text-7xl md:text-9xl font-bold tracking-tighter mb-6">NAME</h1>
+        <p class="text-xl text-slate-400 mb-10">Willkommen in meiner privaten Mod-Galerie.</p>
+        <div class="flex gap-4">
+            <a href="#gallery-section" class="glass px-8 py-4 rounded-full hover:bg-white/10 transition-all">Browse Components</a>
+            <a href="#start-section" class="glass px-8 py-4 rounded-full hover:bg-white/10 transition-all text-slate-400">Zurück</a>
+        </div>
+    </section>
+
+    <section id="gallery-section" class="page-section justify-start pt-20">
+        <div class="w-full max-w-6xl">
+            <a href="#profile-section" class="text-slate-400 hover:text-white mb-10 block">← Zurück</a>
+            <h2 id="gallery-title" class="text-4xl font-bold mb-10">Galerie</h2>
+            <div id="mod-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+        </div>
+    </section>
+
+    <div id="modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/80" onclick="closeModal()">
+        <div class="glass p-8 rounded-3xl max-w-2xl w-full border border-white/20" onclick="event.stopPropagation()">
+            <img id="modal-img" src="" class="w-full h-64 object-cover rounded-xl mb-6">
+            <h3 id="modal-title" class="text-3xl font-bold mb-2"></h3>
+            <p id="modal-desc" class="text-slate-400 mb-6"></p>
+            <a id="modal-zip" href="#" class="block text-center py-3 bg-purple-700 hover:bg-purple-600 rounded-xl font-bold">Download .zip</a>
+        </div>
+    </div>
+
+    <script>
+        const profileData = {
+            "Rollin Noodle": [
+                { id: 1, title: "Neon Shader", desc: "Shader für Lichteffekte.", img: "https://via.placeholder.com/600x300", zip: "#" },
+                { id: 2, title: "Particle Engine", desc: "Interaktive Partikel.", img: "https://via.placeholder.com/600x300", zip: "#" }
+            ],
+            "The Real Plumz": [
+                { id: 1, title: "Plumz Save Edit", desc: "Meine persönlichen Save Edits.", img: "https://via.placeholder.com/600x300", zip: "#" },
+                { id: 2, title: "Custom Configs", desc: "Optimierte Einstellungen.", img: "https://via.placeholder.com/600x300", zip: "#" }
+            ]
+        };
+
+        function selectProfile(name) {
+            document.getElementById('profile-name').innerText = name;
+            document.getElementById('gallery-title').innerText = name + "'s Galerie";
+            renderMods(profileData[name]);
+            window.location.hash = "profile-section";
+        }
+
+        function renderMods(mods) {
+            const grid = document.getElementById('mod-grid');
+            grid.innerHTML = mods.map(mod => `
+                <div class="glass p-4 rounded-2xl border border-white/10 hover:border-purple-500/50 transition-all cursor-pointer flex flex-col" onclick="openModal(${mod.id})">
+                    <img src="${mod.img}" class="w-full h-40 object-cover rounded-lg mb-4">
+                    <h3 class="text-xl font-bold mb-1">${mod.title}</h3>
+                    <p class="text-sm text-slate-400">${mod.desc}</p>
+                </div>
+            `).join('');
+        }
+
+        function openModal(id) { document.getElementById('modal').classList.remove('hidden'); }
+        function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height, time = 0;
+        let points = [];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            points = [];
+            for (let x = 0; x < width; x += 15) {
+                for (let y = 0; y < height; y += 15) {
+                    points.push({ ix: x, iy: y, x: x, y: y });
+                }
+            }
+        }
+
+        function draw() {
+            ctx.fillStyle = '#030206';
+            ctx.fillRect(0, 0, width, height);
+            const layers = [{color: '#581c87', speed: 0.002}, {color: '#4c1d95', speed: 0.003}, {color: '#2e1065', speed: 0.001}];
+            layers.forEach(layer => {
+                let grad = ctx.createRadialGradient(width * 0.5 + Math.sin(time * layer.speed) * 150, height * 0.5 + Math.cos(time * layer.speed) * 150, 0, width * 0.5, height * 0.5, width);
+                grad.addColorStop(0, layer.color); grad.addColorStop(1, 'transparent');
+                ctx.fillStyle = grad; ctx.globalCompositeOperation = 'screen'; ctx.fillRect(0, 0, width, height);
+            });
+            ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+            points.forEach(p => {
+                ctx.beginPath(); ctx.arc(p.x, p.y, 0.6, 0, Math.PI * 2); ctx.fill();
+            });
+            time += 0.5; requestAnimationFrame(draw);
+        }
+        window.addEventListener('resize', resize); resize(); draw();
+    </script>
+</body>
+</html>
